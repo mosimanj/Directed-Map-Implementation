@@ -17,6 +17,10 @@ class Vertex:
         self.adj_list = [] if adj_vert is None else adj_vert
 
 
+class GraphException(Exception):
+    pass
+
+
 class DirectedGraph:
     """
     Directed Graph data structure. Can support weighted or unweighted edges.
@@ -29,13 +33,15 @@ class DirectedGraph:
         self._size = 0
         self._weighted = weighted
 
-    def add_vertex(self, identifier: str, value: object):
+    def add_vertex(self, identifier: str, value: object) -> None:
         """
         Creates a new vertex and adds it to the graph. If a vertex with that identifier already exists in the graph,
         its value is replaced. If replacing an existing vertex value, adjacent vertices will not be changed.
 
         :param identifier:      String representing the unique identifier of the new vertex.
         :param value:           Value that the new vertex will hold.
+
+        :return:                None.
         """
 
         # If identifier already exists in graph, replace value.
@@ -47,4 +53,125 @@ class DirectedGraph:
         # Otherwise, add new vertex and increment size
         self._vertices[identifier] = Vertex(identifier, value)
         self._size += 1
+
+    def remove_vertex(self, identifier: str) -> None:
+        """
+        Removes the vertex with the given identifier and any inbound edges.
+
+        :param identifier:      String representing the identifier of the vertex to be removed.
+
+        :return:                None.
+        """
+        # If vertex does not exist, raise exception
+        if identifier not in self._vertices:
+            raise GraphException
+
+        # Remove any inbound edges
+        for vertex_id in self._vertices:
+            vertex = self._vertices[vertex_id]
+            if identifier in vertex.adj_list:
+                vertex.adj_list.remove(identifier)
+
+        # Delete the vertex and decrement graph size
+        del self._vertices[identifier]
+        self._size -= 1
+
+    def add_edge(self, source_id: str, dest_id: str) -> None:
+        """
+        Creates a new edge between two vertices in the graph. If either of the vertices do not exist, raises exception.
+        If edge already exists, does nothing.
+
+        :param source_id:       String representing the identifier of the vertex where the edge begins.
+        :param dest_id:         String representing the identifier of the vertex where the edge ends.
+
+        :return:                None.
+        """
+        # Raise exception if either vertex is not in the graph
+        if source_id not in self._vertices or dest_id not in self._vertices:
+            print("ERROR: One of the supplied vertices do not exist in the graph.")
+            raise GraphException
+
+        outbound_vert = self._vertices[source_id]
+
+        # If edge did not previously exist, add to outbound vertex's adjacency list
+        if dest_id not in outbound_vert.adj_list:
+            outbound_vert.adj_list.append(dest_id)
+
+    def remove_edge(self, source_id: str, dest_id: str) -> None:
+        """
+        Removes the edge from source to destination vertices. If edge does not exist, raises exception.
+
+        :param source_id:       String representing the identifier of the vertex where the edge begins.
+        :param dest_id:         String representing the identifier of the vertex where the edge ends.
+
+        :return:                None.
+        """
+        # If the edge exists, remove it
+        if source_id in self._vertices:
+            source_list = self._vertices[source_id].adj_list
+            if dest_id in source_list:
+                source_list.remove(dest_id)
+                return
+        # Otherwise, raise exception
+        print("ERROR: Edge does not exist in the graph.")
+        raise GraphException
+
+    def edge_exists(self, source_id: str, dest_id: str) -> bool:
+        """
+        Returns True if the edge exists in the graph, False otherwise.
+
+        :param source_id:       String representing the identifier of the vertex where the edge begins.
+        :param dest_id:         String representing the identifier of the vertex where the edge ends.
+
+        :return:                Boolean. True if edge exists, False otherwise.
+        """
+        # If outbound vert exists, check if inbound vert in adjacency list (y--> True n--> False)
+        if source_id in self._vertices:
+            outbound_vert = self._vertices[source_id]
+            if dest_id in outbound_vert.adj_list:
+                return True
+
+        return False
+
+    def vertex_exists(self, identifier: str) -> bool:
+        """
+        Returns True if the vertex exists in the graph, False otherwise.
+
+        :param identifier:      String representing the identifier of the vertex we are checking for.
+        :return:                Boolean. True of vertex with given identifier exists, False otherwise.
+        """
+        if identifier in self._vertices:
+            return True
+
+        return False
+
+    def get_adjacent_vertices(self, identifier: str) -> list | None:
+        """
+        Returns a list of identifiers of the adjacent vertices for the vertex assigned to the given identifier or None
+        if no adjacent vertices exist. If the vertex does not exist, raises exception.
+
+        :param identifier:      String representing the identifier of the vertex we are getting adjacent vertices of.
+
+        :return:                List of adjacent vertices, or None if no adjacent vertices.
+        """
+        if identifier not in self._vertices:
+            print("ERROR: Vertex does not exist in graph.")
+            raise GraphException
+
+        adj_vertex = self._vertices[identifier].adj_list
+        if len(adj_vertex) == 0:
+            return
+
+        return adj_vertex
+
+
+graph = DirectedGraph()
+graph.add_vertex("alpha", 5)
+graph.add_vertex("beta", 4)
+graph.add_edge("alpha", "beta")
+print(graph.edge_exists("alpha", "beta"))
+# graph.remove_vertex("beta")
+# print(graph._vertices)
+# print(graph.edge_exists("alpha", "beta"))
+print(graph.get_adjacent_vertices("alpha"))
 
