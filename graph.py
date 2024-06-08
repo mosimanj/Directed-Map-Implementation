@@ -11,10 +11,10 @@ class Vertex:
     :param adj_vert:        List containing identifiers of adjacent vertices. Default to None / empty list.
     """
 
-    def __init__(self, identifier: str, value: object, adj_vert: list = None):
+    def __init__(self, identifier: str, value: object, adj_vert: dict = None):
         self.id = identifier
         self.value = value
-        self.adj_list = [] if adj_vert is None else adj_vert
+        self.adj_list = {} if adj_vert is None else adj_vert
 
 
 class GraphException(Exception):
@@ -70,19 +70,21 @@ class DirectedGraph:
         for vertex_id in self._vertices:
             vertex = self._vertices[vertex_id]
             if identifier in vertex.adj_list:
-                vertex.adj_list.remove(identifier)
+                del vertex.adj_list[identifier]
 
         # Delete the vertex and decrement graph size
         del self._vertices[identifier]
         self._size -= 1
 
-    def add_edge(self, source_id: str, dest_id: str) -> None:
+    def add_edge(self, source_id: str, dest_id: str, weight: int = None) -> None:
         """
-        Creates a new edge between two vertices in the graph. If either of the vertices do not exist, raises exception.
-        If edge already exists, does nothing.
+        Creates a new edge between two vertices in the graph. If graph is weighted, weight must be supplied. If graph
+        is not weighted, weight value will be ignored. If either of the vertices do not exist, raises exception. If edge
+        already exists, does nothing.
 
         :param source_id:       String representing the identifier of the vertex where the edge begins.
         :param dest_id:         String representing the identifier of the vertex where the edge ends.
+        :param weight:          Integer representing the weight of the edge. Applies to weighted graphs only.
 
         :return:                None.
         """
@@ -91,11 +93,16 @@ class DirectedGraph:
             print("ERROR: One of the supplied vertices do not exist in the graph.")
             raise GraphException
 
-        outbound_vert = self._vertices[source_id]
+        source_vert = self._vertices[source_id]
 
-        # If edge did not previously exist, add to outbound vertex's adjacency list
-        if dest_id not in outbound_vert.adj_list:
-            outbound_vert.adj_list.append(dest_id)
+        # If edge does not already exist
+        if dest_id not in source_vert.adj_list:
+            # If graph is weighted and no weight was supplied, raise exception
+            if self._weighted and not weight:
+                print("ERROR: Weight must be provided for an edge in the weighted graph.")
+                raise GraphException
+            # Otherwise, add edge - ignore weight if graph not weighted
+            source_vert.adj_list[dest_id] = weight if self._weighted else None
 
     def remove_edge(self, source_id: str, dest_id: str) -> None:
         """
@@ -110,7 +117,7 @@ class DirectedGraph:
         if source_id in self._vertices:
             source_list = self._vertices[source_id].adj_list
             if dest_id in source_list:
-                source_list.remove(dest_id)
+                del source_list[dest_id]
                 return
         # Otherwise, raise exception
         print("ERROR: Edge does not exist in the graph.")
@@ -127,8 +134,8 @@ class DirectedGraph:
         """
         # If outbound vert exists, check if inbound vert in adjacency list (y--> True n--> False)
         if source_id in self._vertices:
-            outbound_vert = self._vertices[source_id]
-            if dest_id in outbound_vert.adj_list:
+            source_vert = self._vertices[source_id]
+            if dest_id in source_vert.adj_list:
                 return True
 
         return False
@@ -162,16 +169,16 @@ class DirectedGraph:
         if len(adj_vertex) == 0:
             return
 
-        return adj_vertex
+        return [key for key in adj_vertex]
 
 
-graph = DirectedGraph()
+graph = DirectedGraph(weighted=True)
 graph.add_vertex("alpha", 5)
 graph.add_vertex("beta", 4)
-graph.add_edge("alpha", "beta")
+graph.add_edge("alpha", "beta", 10)
 print(graph.edge_exists("alpha", "beta"))
-# graph.remove_vertex("beta")
-# print(graph._vertices)
-# print(graph.edge_exists("alpha", "beta"))
 print(graph.get_adjacent_vertices("alpha"))
+graph.remove_edge("alpha", "beta")
+print(graph.get_adjacent_vertices("alpha"))
+
 
