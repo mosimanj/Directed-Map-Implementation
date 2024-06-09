@@ -2,6 +2,10 @@
 # Jacob Mosiman
 # Personal Project June 2024
 
+from stack_sll import Stack
+from queue_sll import Queue
+
+
 class Vertex:
     """
     Object representing a vertex in a graph.
@@ -171,14 +175,70 @@ class DirectedGraph:
 
         return [key for key in adj_vertex]
 
+    def depth_first_search(self, source_id: str, target_id: str) -> bool:
+        """
+        Uses DFS to return True if target_id node is reachable from source_id node. False if unreachable.
 
-graph = DirectedGraph(weighted=True)
-graph.add_vertex("alpha", 5)
-graph.add_vertex("beta", 4)
-graph.add_edge("alpha", "beta", 10)
-print(graph.edge_exists("alpha", "beta"))
-print(graph.get_adjacent_vertices("alpha"))
-graph.remove_edge("alpha", "beta")
-print(graph.get_adjacent_vertices("alpha"))
+        :param source_id:       String representing the identifier of the vertex we are searching FROM.
+        :param target_id:       String representing the identifier of the vertex we are searching FOR.
+
+        :return:                Boolean. True if target reachable from source, False otherwise.
+        """
+        # Init empty set (visited vertices) and stack, then push source vertex to stack
+        visited_vert = set()
+        stack = Stack()
+        stack.push(source_id)
+
+        # While stack is not empty, pop top vertex id
+        while not stack.is_empty():
+            vert_id = stack.pop()
+            # If vertex hasn't been visited, add to visited list and process. If == target, return success.
+            if vert_id not in visited_vert:
+                visited_vert.add(vert_id)
+                if vert_id == target_id:
+                    return True
+                # Push each adjacent vertex to the stack
+                for vertex in self._vertices[vert_id].adj_list:
+                    stack.push(vertex)
+
+        # If target vertex not found, no path exists
+        return False
+
+
+# ---- TESTING ---- #
+graph = DirectedGraph()
+# ---> DEPTH FIRST SEARCH: Save to copy over for actual unit testing
+# graph.add_vertex("a", 5)
+# graph.add_vertex("b", 5)
+# graph.add_vertex("c", 5)
+# graph.add_vertex("d", 5)
+# graph.add_vertex("e", 5)
+# graph.add_vertex("f", 5)
+# graph.add_vertex("g", 5)
+# graph.add_vertex("h", 5)
+# graph.add_vertex("i", 5)
+# graph.add_vertex("j", 5)
+#
+# graph.add_edge("a", "b")
+# graph.add_edge("c", "a")
+# graph.add_edge("b", "c")
+#
+# graph.add_edge("b", "d")
+#
+# graph.add_edge("d", "e")
+# graph.add_edge("d", "f")
+# graph.add_edge("e", "f")
+#
+# graph.add_edge("g", "h")
+# graph.add_edge("h", "j")
+# graph.add_edge("h", "i")
+# graph.add_edge("i", "h")
+#
+# print(graph.depth_first_search("h", "g"))
+
+
+
+
+
 
 
