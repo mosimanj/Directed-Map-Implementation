@@ -2,8 +2,7 @@
 # Jacob Mosiman
 # Personal Project June 2024
 
-from stack_sll import Stack
-from queue_sll import Queue
+from ds_library import Stack, Queue, MinHeap
 
 
 class Vertex:
@@ -274,10 +273,3 @@ graph.add_edge("i", "h")
 #
 # print(graph.depth_first_search("h", "g"))
 print(graph.breadth_first_search("i", "j"))
-
-
-
-
-
-
-
