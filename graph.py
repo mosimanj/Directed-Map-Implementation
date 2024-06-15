@@ -204,37 +204,76 @@ class DirectedGraph:
         # If target vertex not found, no path exists
         return False
 
+    def breadth_first_search(self, source_id: str, target_id: str = None) -> tuple | list:
+        """
+        Uses BFS to return a list of the vertices reachable from the source vertex. If a target_id is specified, will
+        return a tuple containing a Boolean indicating if target is reachable and the list of all vertices reachable
+        from the source vertex.
+
+        :param source_id:       String representing the identifier of the vertex we are searching FROM.
+        :param target_id:       String representing the identifier of the vertex we are searching FOR. Optional value,
+                                if none supplied, will exclusively return list of all vertices reachable.
+
+        :return:                If target_id supplied, will return tuple of (Boolean indicating target reachable, list
+                                of reachable vertices). Otherwise, will exclusively return list of reachable vertices.
+        """
+        # Init empty set (visited vertices) and queue, then enqueue source vertex
+        visited_vert = set()
+        q = Queue()
+        q.enqueue(source_id)
+        target_found = False        # Used if target_id supplied
+
+        while not q.is_empty():
+            vert_id = q.dequeue()
+            # If target_id supplied and current vertex matches, flag target found as True
+            if target_id and vert_id == target_id:
+                target_found = True
+            # Add current vertex to set of visited vertices
+            visited_vert.add(vert_id)
+            # For each vertex adjacent to current vertex, add to queue if not yet visited
+            for vertex in self._vertices[vert_id].adj_list:
+                if vertex not in visited_vert:
+                    q.enqueue(vertex)
+
+        # Create a list of the visited vertices
+        reachable_vert = [vert for vert in visited_vert]
+        # If searching for a target, return tuple. Otherwise, return list.
+        if target_id:
+            return target_found, reachable_vert
+        return reachable_vert
+
 
 # ---- TESTING ---- #
 graph = DirectedGraph()
 # ---> DEPTH FIRST SEARCH: Save to copy over for actual unit testing
-# graph.add_vertex("a", 5)
-# graph.add_vertex("b", 5)
-# graph.add_vertex("c", 5)
-# graph.add_vertex("d", 5)
-# graph.add_vertex("e", 5)
-# graph.add_vertex("f", 5)
-# graph.add_vertex("g", 5)
-# graph.add_vertex("h", 5)
-# graph.add_vertex("i", 5)
-# graph.add_vertex("j", 5)
-#
-# graph.add_edge("a", "b")
-# graph.add_edge("c", "a")
-# graph.add_edge("b", "c")
-#
-# graph.add_edge("b", "d")
-#
-# graph.add_edge("d", "e")
-# graph.add_edge("d", "f")
-# graph.add_edge("e", "f")
-#
-# graph.add_edge("g", "h")
-# graph.add_edge("h", "j")
-# graph.add_edge("h", "i")
-# graph.add_edge("i", "h")
+graph.add_vertex("a", 5)
+graph.add_vertex("b", 5)
+graph.add_vertex("c", 5)
+graph.add_vertex("d", 5)
+graph.add_vertex("e", 5)
+graph.add_vertex("f", 5)
+graph.add_vertex("g", 5)
+graph.add_vertex("h", 5)
+graph.add_vertex("i", 5)
+graph.add_vertex("j", 5)
+
+graph.add_edge("a", "b")
+graph.add_edge("c", "a")
+graph.add_edge("b", "c")
+
+graph.add_edge("b", "d")
+
+graph.add_edge("d", "e")
+graph.add_edge("d", "f")
+graph.add_edge("e", "f")
+
+graph.add_edge("g", "h")
+graph.add_edge("h", "j")
+graph.add_edge("h", "i")
+graph.add_edge("i", "h")
 #
 # print(graph.depth_first_search("h", "g"))
+print(graph.breadth_first_search("i", "j"))
 
 
 
