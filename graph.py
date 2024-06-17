@@ -17,13 +17,12 @@ class Vertex:
     def __init__(self, identifier: str, value: object, adj_vert: dict = None):
         self.id = identifier
         self.value = value
-        self.adj_list = {} if adj_vert is None else adj_vert
-        # TODO: update name from 'list'
+        self.adj_dict = {} if adj_vert is None else adj_vert
 
 
 class GraphException(Exception):
-    pass
-    # TODO: build out exceptions based on circumstance and change from print error
+    def __init__(self, message: str):
+        super().__init__(message)
 
 
 class DirectedGraph:
@@ -48,11 +47,10 @@ class DirectedGraph:
 
         :return:                None.
         """
-
         # If identifier already exists in graph, replace value.
         if identifier in self._vertices:
             old_vert = self._vertices[identifier]
-            self._vertices[identifier] = Vertex(identifier, value, old_vert.adj_list)
+            self._vertices[identifier] = Vertex(identifier, value, old_vert.adj_dict)
             return
 
         # Otherwise, add new vertex and increment size
@@ -69,13 +67,13 @@ class DirectedGraph:
         """
         # If vertex does not exist, raise exception
         if identifier not in self._vertices:
-            raise GraphException
+            raise GraphException("Error: There is no vertex in the graph with the provided identifier.")
 
         # Remove any inbound edges
         for vertex_id in self._vertices:
             vertex = self._vertices[vertex_id]
-            if identifier in vertex.adj_list:
-                del vertex.adj_list[identifier]
+            if identifier in vertex.adj_dict:
+                del vertex.adj_dict[identifier]
 
         # Delete the vertex and decrement graph size
         del self._vertices[identifier]
@@ -94,20 +92,20 @@ class DirectedGraph:
         :return:                None.
         """
         # Raise exception if either vertex is not in the graph
-        if source_id not in self._vertices or dest_id not in self._vertices:
-            print("ERROR: One of the supplied vertices do not exist in the graph.")
-            raise GraphException
+        if source_id not in self._vertices:
+            raise GraphException("Error: There is no vertex in the graph with the provided source identifier.")
+        elif dest_id not in self._vertices:
+            raise GraphException("Error: There is no vertex in the graph with the provided destination identifier.")
 
         source_vert = self._vertices[source_id]
 
         # If edge does not already exist
-        if dest_id not in source_vert.adj_list:
+        if dest_id not in source_vert.adj_dict:
             # If graph is weighted and no weight was supplied, raise exception
             if self._weighted and not weight:
-                print("ERROR: Weight must be provided for an edge in the weighted graph.")
-                raise GraphException
+                raise GraphException("Error: Graph is weighted - all edges must be supplied with a weight.")
             # Otherwise, add edge - ignore weight if graph not weighted
-            source_vert.adj_list[dest_id] = weight if self._weighted else None
+            source_vert.adj_dict[dest_id] = weight if self._weighted else None
 
     def remove_edge(self, source_id: str, dest_id: str) -> None:
         """
@@ -120,13 +118,12 @@ class DirectedGraph:
         """
         # If the edge exists, remove it
         if source_id in self._vertices:
-            source_list = self._vertices[source_id].adj_list
+            source_list = self._vertices[source_id].adj_dict
             if dest_id in source_list:
                 del source_list[dest_id]
                 return
         # Otherwise, raise exception
-        print("ERROR: Edge does not exist in the graph.")
-        raise GraphException
+        raise GraphException("Error: No edge exists between the source vertex and destination vertex.")
 
     def edge_exists(self, source_id: str, dest_id: str) -> bool:
         """
@@ -140,7 +137,7 @@ class DirectedGraph:
         # If outbound vert exists, check if inbound vert in adjacency list (y--> True n--> False)
         if source_id in self._vertices:
             source_vert = self._vertices[source_id]
-            if dest_id in source_vert.adj_list:
+            if dest_id in source_vert.adj_dict:
                 return True
 
         return False
@@ -167,10 +164,9 @@ class DirectedGraph:
         :return:                List of adjacent vertices, or None if no adjacent vertices.
         """
         if identifier not in self._vertices:
-            print("ERROR: Vertex does not exist in graph.")
-            raise GraphException
+            raise GraphException("Error: There is no vertex in the graph with the provided identifier.")
 
-        adj_vertex = self._vertices[identifier].adj_list
+        adj_vertex = self._vertices[identifier].adj_dict
         if len(adj_vertex) == 0:
             return
 
@@ -185,6 +181,11 @@ class DirectedGraph:
 
         :return:                Boolean. True if target reachable from source, False otherwise.
         """
+        if source_id not in self._vertices:
+            raise GraphException("Error: There is no vertex in the graph with the provided source identifier.")
+        elif target_id not in self._vertices:
+            raise GraphException("Error: There is no vertex in the graph with the provided target identifier.")
+
         # Init empty set (visited vertices) and stack, then push source vertex to stack
         visited_vert = set()
         stack = Stack()
@@ -199,7 +200,7 @@ class DirectedGraph:
                 if vert_id == target_id:
                     return True
                 # Push each adjacent vertex to the stack
-                for vertex in self._vertices[vert_id].adj_list:
+                for vertex in self._vertices[vert_id].adj_dict:
                     stack.push(vertex)
 
         # If target vertex not found, no path exists
@@ -218,6 +219,11 @@ class DirectedGraph:
         :return:                If target_id supplied, will return tuple of (Boolean indicating target reachable, list
                                 of reachable vertices). Otherwise, will exclusively return list of reachable vertices.
         """
+        if source_id not in self._vertices:
+            raise GraphException("Error: There is no vertex in the graph with the provided source identifier.")
+        elif target_id and target_id not in self._vertices:
+            raise GraphException("Error: There is no vertex in the graph with the provided target identifier.")
+
         # Init empty set (visited vertices) and queue, then enqueue source vertex
         visited_vert = set()
         q = Queue()
@@ -232,7 +238,7 @@ class DirectedGraph:
             # Add current vertex to set of visited vertices
             visited_vert.add(vert_id)
             # For each vertex adjacent to current vertex, add to queue if not yet visited
-            for vertex in self._vertices[vert_id].adj_list:
+            for vertex in self._vertices[vert_id].adj_dict:
                 if vertex not in visited_vert:
                     q.enqueue(vertex)
 
@@ -256,7 +262,9 @@ class DirectedGraph:
         """
         # If graph not weighted, raise exception
         if not self._weighted:
-            raise GraphException
+            raise GraphException("Error: min_path() requires a weighted graph. Current graph unweighted.")
+        elif source_id not in self._vertices:
+            raise GraphException("Error: There is no vertex in the graph with the provided identifier.")
 
         # Init dictionary of visited vertices and priority queue of vertices to check. Add source vertex to priority q.
         visited_vert = {}
@@ -269,7 +277,7 @@ class DirectedGraph:
             # If vertex hasn't been visited, add to visited_vert and enqueue adjacent vertices
             if vertex not in visited_vert:
                 visited_vert[vertex] = distance
-                adj_vert = self._vertices[vertex].adj_list
+                adj_vert = self._vertices[vertex].adj_dict
                 for vert in adj_vert:
                     # Set adjacent vertex's priority (distance) to dequeued vertex's distance + distance of adj edge
                     vert_priority = distance + adj_vert[vert]
@@ -279,31 +287,32 @@ class DirectedGraph:
 # ---- TESTING ---- #
 graph = DirectedGraph()
 # ---> DEPTH FIRST SEARCH: Save to copy over for actual unit testing
-graph.add_vertex("a", 5)
-graph.add_vertex("b", 5)
-graph.add_vertex("c", 5)
-graph.add_vertex("d", 5)
-graph.add_vertex("e", 5)
-graph.add_vertex("f", 5)
-graph.add_vertex("g", 5)
-graph.add_vertex("h", 5)
-graph.add_vertex("i", 5)
-graph.add_vertex("j", 5)
-
-graph.add_edge("a", "b")
-graph.add_edge("c", "a")
-graph.add_edge("b", "c")
-
-graph.add_edge("b", "d")
-
-graph.add_edge("d", "e")
-graph.add_edge("d", "f")
-graph.add_edge("e", "f")
-
-graph.add_edge("g", "h")
-graph.add_edge("h", "j")
-graph.add_edge("h", "i")
-graph.add_edge("i", "h")
+# graph.add_vertex("a", 5)
+# graph.add_vertex("b", 5)
+# graph.add_vertex("c", 5)
+# graph.add_vertex("d", 5)
+# graph.add_vertex("e", 5)
+# graph.add_vertex("f", 5)
+# graph.add_vertex("g", 5)
+# graph.add_vertex("h", 5)
+# graph.add_vertex("i", 5)
+# graph.add_vertex("j", 5)
 #
-# print(graph.depth_first_search("h", "g"))
-print(graph.breadth_first_search("i", "j"))
+# graph.add_edge("a", "b")
+# graph.add_edge("c", "a")
+# graph.add_edge("b", "c")
+#
+# graph.add_edge("b", "d")
+#
+# graph.add_edge("d", "e")
+# graph.add_edge("d", "f")
+# graph.add_edge("e", "f")
+#
+# graph.add_edge("g", "h")
+# graph.add_edge("h", "j")
+# graph.add_edge("h", "i")
+# graph.add_edge("i", "h")
+# #
+# # print(graph.depth_first_search("h", "g"))
+# print(graph.breadth_first_search("i", "j"))
+graph.remove_vertex('a')
