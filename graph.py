@@ -2,7 +2,7 @@
 # Jacob Mosiman
 # Personal Project June 2024
 
-from ds_library import Stack, Queue, MinHeap
+from ds_library import Stack, Queue, PriorityQueue
 
 
 class Vertex:
@@ -18,10 +18,12 @@ class Vertex:
         self.id = identifier
         self.value = value
         self.adj_list = {} if adj_vert is None else adj_vert
+        # TODO: update name from 'list'
 
 
 class GraphException(Exception):
     pass
+    # TODO: build out exceptions based on circumstance and change from print error
 
 
 class DirectedGraph:
@@ -240,6 +242,38 @@ class DirectedGraph:
         if target_id:
             return target_found, reachable_vert
         return reachable_vert
+
+    def min_path(self, source_id: str) -> tuple:
+        """
+        Calculates the minimum distance from vertex of supplied source_id to all other reachable vertices in the graph.
+        Returns a dictionary containing a list of vertices from nearest to farthest, and a dictionary containing each
+        vertex and its associated distance.
+
+        :param source_id:   String representing the identifier of the vertex we are searching from.
+
+        :return:            Tuple containing a list of vertices ordered from the smallest distance to the largest, and a
+                            dictionary containing each vertex and its associated distance as key-value pairs.
+        """
+        # If graph not weighted, raise exception
+        if not self._weighted:
+            raise GraphException
+
+        # Init dictionary of visited vertices and priority queue of vertices to check. Add source vertex to priority q.
+        visited_vert = {}
+        p_queue = PriorityQueue()
+        p_queue.enqueue(0, source_id)
+
+        # While the priority queue is not empty, dequeue and assign vertex's distance and ID to variables
+        while not p_queue.is_empty():
+            distance, vertex = p_queue.dequeue()
+            # If vertex hasn't been visited, add to visited_vert and enqueue adjacent vertices
+            if vertex not in visited_vert:
+                visited_vert[vertex] = distance
+                adj_vert = self._vertices[vertex].adj_list
+                for vert in adj_vert:
+                    # Set adjacent vertex's priority (distance) to dequeued vertex's distance + distance of adj edge
+                    vert_priority = distance + adj_vert[vert]
+                    p_queue.enqueue(vert_priority, vert)
 
 
 # ---- TESTING ---- #

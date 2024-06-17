@@ -3,7 +3,7 @@
 class Node:
     """Node used in Queue and Stack implementations."""
 
-    def __init__(self, value: object, next = None):
+    def __init__(self, value: object, next=None):
         self.value = value
         self.next = next
 
@@ -138,27 +138,30 @@ class MinHeapEmptyException(Exception):
 
 
 class MinHeap:
-    """MinHeap used for min_path (Dijkstra's Algorithm) method in map class."""
+    """MinHeap used for min_path (Dijkstra's Algorithm) method in directed map class."""
     def __init__(self):
         self._heap = []
 
-    def add(self, node: object) -> None:
+    def add(self, priority: int, value: object) -> None:
         """
-        Adds specified object to MinHeap. Operation maintains heap property.
+        Adds specified object to MinHeap with the given priority. Operation maintains heap property.
 
-        :param node:    Object to be added to the MinHeap.
+        :param priority:    Integer representing the priority of the value being added to the MinHeap. Smaller priority
+                            values are at the top of the MinHeap.
+        :param value:       Object representing the value being added to the MinHeap.
 
         :return:        None
         """
-        # Add node to end of storage array
+        # Add the priority and value ('node') to end of storage array as tuple
+        node = (priority, value)
         self._heap.append(node)
 
         # Initialize variables to calculate and track index of node and parent
         node_ind = len(self._heap) - 1
         parent_ind = (node_ind-1)//2
 
-        # While node not at start of storage array and node's value less than parent, percolate up
-        while node_ind > 0 and self._heap[node_ind] < self._heap[parent_ind]:
+        # While node not at start of storage array and node's priority value less than parent's, percolate up
+        while node_ind > 0 and self._heap[node_ind][0] < self._heap[parent_ind][0]:
             self._heap[node_ind] = self._heap[parent_ind]
             self._heap[parent_ind] = node
             node_ind = parent_ind
@@ -178,13 +181,13 @@ class MinHeap:
 
         return False
 
-    def remove_min(self) -> object:
+    def remove_min(self) -> tuple:
         """
         Removes and returns the heap's top item. Raises exception if heap is empty.
 
         :param:     None.
 
-        :return:    Object at the top of the heap before method call.
+        :return:    Tuple containing the priority and value of the top item of the heap before method call.
         """
         # If empty --> exception, if one element --> remove and return it
         if self.is_empty():
@@ -193,7 +196,7 @@ class MinHeap:
             return self._heap.pop()
 
         # Store min value before replacing with last element added
-        min_val = self._heap[0]
+        min_val = self._heap[0][1]
         self._heap[0] = self._heap.pop()
 
         # If there is more than one element after last element removed, percolate replacement down
@@ -209,32 +212,81 @@ class MinHeap:
 
         :return:        None.
         """
-        parent_value = self._heap[0]
-        parent = 0
-        left = 1
-        right = 2
-        end = len(self._heap) - 1
+        parent = self._heap[0]
+        parent_ind = 0
+        left_ind = 1
+        right_ind = 2
+        end_ind = len(self._heap) - 1
 
         # Continue while one of the computed child indices are valid
-        while left <= end or right <= end:
+        while left_ind <= end_ind or right_ind <= end_ind:
             # If both indices are valid, set target to smallest (or left if equal). If only one valid, set as target.
-            if left <= end and right <= end:
-                if self._heap[left] <= self._heap[right]:
-                    target = left
+            if left_ind <= end_ind and right_ind <= end_ind:
+                if self._heap[left_ind][0] <= self._heap[right_ind][0]:
+                    target = left_ind
                 else:
-                    target = right
-            elif left <= end:
-                target = left
+                    target = right_ind
+            elif left_ind <= end_ind:
+                target = left_ind
             else:
-                target = right
+                target = right_ind
 
             # If parent's value greater than target's, swap & update pointers. Otherwise, return (at final position).
-            if self._heap[parent] > self._heap[target]:
-                self._heap[parent] = self._heap[target]
-                self._heap[target] = parent_value
+            if self._heap[parent_ind][0] > self._heap[target][0]:
+                self._heap[parent_ind] = self._heap[target]
+                self._heap[target] = parent
 
-                parent = target
-                left = (2 * parent) + 1
-                right = (2 * parent) + 2
+                parent_ind = target
+                left_ind = (2 * parent_ind) + 1
+                right_ind = (2 * parent_ind) + 2
             else:
                 return
+
+    def print_heap(self) -> None:
+        """
+        Prints the MinHeap's underlying storage array. Used for testing.
+
+        :param:         None.
+
+        :return:        None.
+        """
+        print([val for val in self._heap])
+
+
+class PriorityQueue:
+    """Priority Queue ADT used for directed graph's min_path. Utilizes MinHeap as underlying data structure."""
+
+    def __init__(self):
+        self._data = MinHeap()
+
+    def enqueue(self, priority: int, value: object) -> None:
+        """
+        Adds the specified value to the PriorityQueue. Its position in the queue is determined based on the given
+        priority. The smallest priority value is placed in the front of the queue.
+
+        :param priority:    Integer representing the priority of the added item. Smaller value = higher priority.
+        :param value:       The value being stored in the PriorityQueue.
+
+        :return:            None.
+        """
+        self._data.add(priority, value)
+
+    def dequeue(self) -> tuple:
+        """
+        Removes the first item in the PriorityQueue and returns its value and priority as a tuple.
+
+        :param:             None.
+
+        :return:            Tuple containing the priority and value of the first item in the PriorityQueue.
+        """
+        return self._data.remove_min()
+
+    def is_empty(self) -> bool:
+        """
+        Returns True if PriorityQueue is empty, otherwise returns False (if not empty).
+
+        :param:     None.
+
+        :return:    Boolean. True if empty, False if not empty.
+        """
+        return self._data.is_empty()
