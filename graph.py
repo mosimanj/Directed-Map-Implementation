@@ -282,37 +282,3 @@ class DirectedGraph:
                     # Set adjacent vertex's priority (distance) to dequeued vertex's distance + distance of adj edge
                     vert_priority = distance + adj_vert[vert]
                     p_queue.enqueue(vert_priority, vert)
-
-
-# ---- TESTING ---- #
-graph = DirectedGraph()
-# ---> DEPTH FIRST SEARCH: Save to copy over for actual unit testing
-# graph.add_vertex("a", 5)
-# graph.add_vertex("b", 5)
-# graph.add_vertex("c", 5)
-# graph.add_vertex("d", 5)
-# graph.add_vertex("e", 5)
-# graph.add_vertex("f", 5)
-# graph.add_vertex("g", 5)
-# graph.add_vertex("h", 5)
-# graph.add_vertex("i", 5)
-# graph.add_vertex("j", 5)
-#
-# graph.add_edge("a", "b")
-# graph.add_edge("c", "a")
-# graph.add_edge("b", "c")
-#
-# graph.add_edge("b", "d")
-#
-# graph.add_edge("d", "e")
-# graph.add_edge("d", "f")
-# graph.add_edge("e", "f")
-#
-# graph.add_edge("g", "h")
-# graph.add_edge("h", "j")
-# graph.add_edge("h", "i")
-# graph.add_edge("i", "h")
-# #
-# # print(graph.depth_first_search("h", "g"))
-# print(graph.breadth_first_search("i", "j"))
-graph.remove_vertex('a')
